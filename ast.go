@@ -6,6 +6,7 @@ type Node interface{}
 
 type Statement interface {
 	S()
+	String() string
 }
 
 type Expression interface {
@@ -91,3 +92,57 @@ type Identifier struct {
 
 func (i *Identifier) E()             {}
 func (i *Identifier) String() string { return i.Name }
+
+type IfStmt struct {
+	Cond Expression
+	Body []Statement
+}
+
+func (i *IfStmt) S() {}
+func (i *IfStmt) String() string {
+	s := "? "
+	if i.Cond == nil {
+		s += "  " + " -> "
+	} else {
+		s += i.Cond.String() + " -> "
+	}
+	body := "\n\t"
+	for _, v := range i.Body {
+		body += "\n\t" + v.String()
+	}
+	s += body + ";"
+	return s
+}
+
+type LoopStmt struct {
+	Start, End *IntLiteral
+	Body       []Statement
+}
+
+func (l *LoopStmt) S() {}
+func (l *LoopStmt) String() string {
+	body := "\t\n"
+	for _, v := range l.Body {
+		body += "\n\t" + v.String()
+	}
+	if l.Start == nil {
+		l.Start = &IntLiteral{Value: 0}
+	}
+	if l.End == nil {
+		l.End = &IntLiteral{Value: 0}
+	}
+	s := fmt.Sprintf("@%d..%d -> %s;", l.Start.Value, l.End.Value, body)
+	return s
+}
+
+type PrintStmt struct {
+	Value Expression
+}
+
+func (p *PrintStmt) S() {}
+func (p *PrintStmt) String() string {
+	if p.Value == nil {
+		return "print "
+	}
+	return "print " + p.Value.String()
+}

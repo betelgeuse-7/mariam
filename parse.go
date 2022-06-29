@@ -109,8 +109,17 @@ func (p *Parser) parseStatement() Statement {
 	for p.cur.Typ == TokNewline {
 		p.advance()
 	}
+	if p.cur.Typ == TokEof {
+		return nil
+	}
 	if p.cur.Typ == TokSet {
 		return p.parseVarDecl()
+	} else if p.cur.Typ == TokQuestionMark {
+		return p.parseIfStmt()
+	} else if p.cur.Typ == TokAt {
+		return p.parseLoopStmt()
+	} else if p.cur.Typ == TokPrint {
+		return p.parsePrintStmt()
 	}
 	return p.parseExprStatement()
 }
@@ -194,4 +203,63 @@ func (p *Parser) parseBoolLiteral() Expression {
 
 func (p *Parser) parseIdent() Expression {
 	return &Identifier{Name: p.cur.Lit}
+}
+
+// TODO get rid of p.advance() lines
+func (p *Parser) parseIfStmt() *IfStmt {
+	stmt := &IfStmt{}
+	p.advance()
+	stmt.Cond = p.parseExpr(PREC_LOWEST)
+	if stmt.Cond == nil {
+		p.error_("missing expression after '?'")
+	}
+	p.advance()
+	if p.cur.Typ != TokArrow {
+		p.error_("missing -> in if statement")
+	}
+	p.advance()
+	for p.cur.Typ != TokSemicolon {
+		if p.cur.Typ == TokEof {
+			p.error_("unexpected EOF in if statement body")
+		}
+		stmt.Body = append(stmt.Body, p.parseStatement())
+		p.advance()
+	}
+	return stmt
+}
+
+// TODO get rid of p.advance() lines
+func (p *Parser) parseLoopStmt() *LoopStmt {
+	stmt := &LoopStmt{}
+	p.advance()
+	stmt.Start = p.parseIntLiteral().(*IntLiteral)
+	if p.peek.Typ != TokDotDot {
+		p.error_("missing '..' in loop statement")
+	}
+	p.advance()
+	p.advance()
+	stmt.End = p.parseIntLiteral().(*IntLiteral)
+	p.advance()
+	if p.cur.Typ != TokArrow {
+		p.error_("missing '->' in loop statement")
+	}
+	p.advance()
+	for p.cur.Typ != TokSemicolon {
+		if p.cur.Typ == TokEof {
+			p.error_("unexpected EOF in loop statement body")
+		}
+		stmt.Body = append(stmt.Body, p.parseStatement())
+		p.advance()
+	}
+	return stmt
+}
+
+func (p *Parser) parsePrintStmt() *PrintStmt {
+	stmt := &PrintStmt{}
+	p.advance()
+	stmt.Value = p.parseExpr(PREC_LOWEST)
+	if stmt.Value == nil {
+		p.error_("missing arguement for print statement")
+	}
+	return stmt
 }
