@@ -89,5 +89,7 @@ func TestParserParse(t *testing.T) {
 	p := NewParser(l)
 	parsed := p.Parse()
 
+	t.Logf("len: %d\n", len(parsed.Statements))
+
 	t.Logf("stmts: %v\n", parsed.Statements)
 }

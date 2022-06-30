@@ -220,9 +220,12 @@ func (p *Parser) parseIfStmt() *IfStmt {
 	p.advance()
 	for p.cur.Typ != TokSemicolon {
 		if p.cur.Typ == TokEof {
-			p.error_("unexpected EOF in if statement body")
+			break
 		}
-		stmt.Body = append(stmt.Body, p.parseStatement())
+		newBodyStmt := p.parseStatement()
+		if newBodyStmt != nil {
+			stmt.Body = append(stmt.Body, newBodyStmt)
+		}
 		p.advance()
 	}
 	return stmt
@@ -246,9 +249,12 @@ func (p *Parser) parseLoopStmt() *LoopStmt {
 	p.advance()
 	for p.cur.Typ != TokSemicolon {
 		if p.cur.Typ == TokEof {
-			p.error_("unexpected EOF in loop statement body")
+			break
 		}
-		stmt.Body = append(stmt.Body, p.parseStatement())
+		newBodyStmt := p.parseStatement()
+		if newBodyStmt != nil {
+			stmt.Body = append(stmt.Body, newBodyStmt)
+		}
 		p.advance()
 	}
 	return stmt
